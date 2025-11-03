@@ -1,5 +1,3 @@
-version: "3.8"
-
 # YAML anchors to DRY common config
 x-shared-env-file: &shared_env_file ./.env
 x-common-env: &common_env
@@ -12,7 +10,6 @@ x-default-logging: &default_logging
 
 services:
   actual-events:
-    profiles: ["events"]
     image: ghcr.io/rjlee/actual-events:api-${ACTUAL_API_MAJOR}
     container_name: actual-events
     env_file:
@@ -31,7 +28,6 @@ services:
     logging: *default_logging
 
   actual-auto-categorise:
-    profiles: ["categorise"]
     image: ghcr.io/rjlee/actual-auto-categorise:api-${ACTUAL_API_MAJOR}
     container_name: actual-auto-categorise
     env_file:
@@ -53,7 +49,6 @@ services:
     logging: *default_logging
 
   actual-auto-reconcile:
-    profiles: ["reconcile"]
     image: ghcr.io/rjlee/actual-auto-reconcile:api-${ACTUAL_API_MAJOR}
     container_name: actual-auto-reconcile
     env_file:
@@ -73,7 +68,6 @@ services:
     logging: *default_logging
 
   actual-investment-sync:
-    profiles: ["invest"]
     image: ghcr.io/rjlee/actual-investment-sync:api-${ACTUAL_API_MAJOR}
     container_name: actual-investment-sync
     env_file:
@@ -95,7 +89,6 @@ services:
     logging: *default_logging
 
   actual-landg-pension:
-    profiles: ["landg"]
     image: ghcr.io/rjlee/actual-landg-pension:api-${ACTUAL_API_MAJOR}
     container_name: actual-landg-pension
     env_file:
@@ -117,7 +110,6 @@ services:
     logging: *default_logging
 
   actual-monzo-pots:
-    profiles: ["monzo"]
     image: ghcr.io/rjlee/actual-monzo-pots:api-${ACTUAL_API_MAJOR}
     container_name: actual-monzo-pots
     env_file:
@@ -139,7 +131,6 @@ services:
     logging: *default_logging
 
   actual-tx-linker:
-    profiles: ["linker"]
     image: ghcr.io/rjlee/actual-tx-linker:api-${ACTUAL_API_MAJOR}
     container_name: actual-tx-linker
     env_file:
