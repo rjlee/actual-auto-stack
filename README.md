@@ -12,8 +12,19 @@ Stack usage
   - `stack/env/actual-monzo-pots.env`
   - `stack/env/actual-tx-linker.env`
   - Each example includes common keys for that service (ports, scheduling, UI auth, provider creds); leave blank to inherit from the shared `stack/.env`.
-- Start from the repo root:
+ - Start from the repo root:
   - `docker compose -f stack/docker-compose.yml --env-file stack/.env up -d`
+
+User includes (modular snippets)
+
+- The main compose file auto-includes any `*.yml` files under `stack/includes/`.
+- Drop your own fragments there to add services, networks, labels, or override settings without editing the main file.
+- Example files:
+  - `stack/includes/reverse-proxy.yml` to add Traefik/Caddy
+  - `stack/includes/monitoring.yml` to add Loki/Grafana/Promtail
+- Compose merges these includes automatically; just run the normal `docker compose` command.
+
+Note: the include directive requires Docker Compose v2.20+ (`docker compose version`).
 
 Single-service runs
 
@@ -25,7 +36,7 @@ Single-service runs
 Notes
 
 - Startup order: `actual-events` defines a healthcheck and other services declare `depends_on: condition: service_healthy`, so they wait for `actual-events` to be healthy before starting.
-- Ports are enabled by default and read from `stack/.env` (`EVENTS_HTTP_PORT`, `CATEGORISE_HTTP_PORT`, `INVEST_SYNC_HTTP_PORT`, `LANDG_HTTP_PORT`, `MONZO_HTTP_PORT`). Adjust as needed.
+- Ports are enabled by default and read from `stack/.env` (`EVENTS_HTTP_PORT`, `CATEGORISE_HTTP_PORT`). Example ports for optional includes are commented in `stack/.env.example`.
 - All images use `api-${ACTUAL_API_MAJOR}` so switching API majors is a one-line change in `stack/.env`.
 
 Data layout

@@ -1,0 +1,26 @@
+services:
+  actual-landg-pension:
+    image: ghcr.io/rjlee/actual-landg-pension:api-${ACTUAL_API_MAJOR}
+    container_name: actual-landg-pension
+    env_file:
+      - ./.env
+      - ./env/actual-landg-pension.env
+    environment:
+      BUDGET_DIR: /app/data/budget
+      HTTP_PORT: ${LANDG_HTTP_PORT}
+    ports:
+      - "${LANDG_HTTP_PORT:-3000}:${LANDG_HTTP_PORT:-3000}"
+    restart: unless-stopped
+    depends_on:
+      actual-events:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./state/actual-landg-pension
+        target: /app/data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
