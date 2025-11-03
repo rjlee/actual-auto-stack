@@ -1,7 +1,3 @@
-# Auto-include user fragments from ./includes/*.yml (Compose v2 include)
-include:
-  - ./includes/*.yml
-
 # YAML anchors to DRY common config
 x-shared-env-file: &shared_env_file ./.env
 x-common-env: &common_env

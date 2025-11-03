@@ -17,12 +17,17 @@ Stack usage
 
 User includes (modular snippets)
 
-- The main compose file auto-includes any `*.yml` files under `stack/includes/`.
-- Drop your own fragments there to add services, networks, labels, or override settings without editing the main file.
-- Example files:
-  - `stack/includes/reverse-proxy.yml` to add Traefik/Caddy
-  - `stack/includes/monitoring.yml` to add Loki/Grafana/Promtail
-- Compose merges these includes automatically; just run the normal `docker compose` command.
+- Create `stack/docker-compose.override.yml` by copying the example:
+  - `cp stack/docker-compose.override.yml.example stack/docker-compose.override.yml`
+- The override file uses the Compose `include` directive to load any service snippets you enable under `stack/includes/`.
+- Example includes (provided as `.yml.example`):
+  - `stack/includes/actual-investment-sync.yml.example`
+  - `stack/includes/actual-monzo-pots.yml.example`
+  - `stack/includes/actual-landg-pension.yml.example`
+- Enable a service by creating the referenced `.yml` file:
+  - `cp stack/includes/actual-investment-sync.yml.example stack/includes/actual-investment-sync.yml`
+  - Repeat for others as needed.
+- Then run the normal `docker compose` command and the override will be merged automatically.
 
 Note: the include directive requires Docker Compose v2.20+ (`docker compose version`).
 

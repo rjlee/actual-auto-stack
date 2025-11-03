@@ -1,0 +1,14 @@
+# User overrides
+#
+# This override file is automatically loaded by Docker Compose
+# alongside `stack/docker-compose.yml` (no extra flags needed).
+#
+# It demonstrates using the Compose `include` directive to bring in
+# optional services from `stack/includes/`. Ensure the referenced
+# files exist (create or rename the provided `.yml.example` files).
+
+include:
+  - ./includes/actual-investment-sync.yml
+  - ./includes/actual-monzo-pots.yml
+  - ./includes/actual-landg-pension.yml
+
