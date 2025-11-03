@@ -1,0 +1,159 @@
+version: "3.8"
+
+# YAML anchors to DRY common config
+x-shared-env-file: &shared_env_file ./.env
+x-common-env: &common_env
+  BUDGET_DIR: /app/data/budget
+x-default-logging: &default_logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  actual-events:
+    profiles: ["events"]
+    image: ghcr.io/rjlee/actual-events:api-${ACTUAL_API_MAJOR}
+    container_name: actual-events
+    env_file:
+      - *shared_env_file
+      - ./env/actual-events.env
+    environment:
+      <<: *common_env
+      HTTP_PORT: ${EVENTS_HTTP_PORT}
+    ports:
+      - "${EVENTS_HTTP_PORT:-4000}:${EVENTS_HTTP_PORT:-4000}"
+    restart: unless-stopped
+    volumes:
+      - type: bind
+        source: ./state/actual-events
+        target: /app/data
+    logging: *default_logging
+
+  actual-auto-categorise:
+    profiles: ["categorise"]
+    image: ghcr.io/rjlee/actual-auto-categorise:api-${ACTUAL_API_MAJOR}
+    container_name: actual-auto-categorise
+    env_file:
+      - *shared_env_file
+      - ./env/actual-auto-categorise.env
+    environment:
+      <<: *common_env
+      HTTP_PORT: ${CATEGORISE_HTTP_PORT}
+    ports:
+      - "${CATEGORISE_HTTP_PORT:-3000}:${CATEGORISE_HTTP_PORT:-3000}"
+    restart: unless-stopped
+    depends_on:
+      actual-events:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./state/actual-auto-categorise
+        target: /app/data
+    logging: *default_logging
+
+  actual-auto-reconcile:
+    profiles: ["reconcile"]
+    image: ghcr.io/rjlee/actual-auto-reconcile:api-${ACTUAL_API_MAJOR}
+    container_name: actual-auto-reconcile
+    env_file:
+      - *shared_env_file
+      - ./env/actual-auto-reconcile.env
+    environment:
+      <<: *common_env
+    restart: unless-stopped
+    command: ["--mode", "daemon"]
+    depends_on:
+      actual-events:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./state/actual-auto-reconcile
+        target: /app/data
+    logging: *default_logging
+
+  actual-investment-sync:
+    profiles: ["invest"]
+    image: ghcr.io/rjlee/actual-investment-sync:api-${ACTUAL_API_MAJOR}
+    container_name: actual-investment-sync
+    env_file:
+      - *shared_env_file
+      - ./env/actual-investment-sync.env
+    environment:
+      <<: *common_env
+      HTTP_PORT: ${INVEST_SYNC_HTTP_PORT}
+    ports:
+      - "${INVEST_SYNC_HTTP_PORT:-3000}:${INVEST_SYNC_HTTP_PORT:-3000}"
+    restart: unless-stopped
+    depends_on:
+      actual-events:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./state/actual-investment-sync
+        target: /app/data
+    logging: *default_logging
+
+  actual-landg-pension:
+    profiles: ["landg"]
+    image: ghcr.io/rjlee/actual-landg-pension:api-${ACTUAL_API_MAJOR}
+    container_name: actual-landg-pension
+    env_file:
+      - *shared_env_file
+      - ./env/actual-landg-pension.env
+    environment:
+      <<: *common_env
+      HTTP_PORT: ${LANDG_HTTP_PORT}
+    ports:
+      - "${LANDG_HTTP_PORT:-3000}:${LANDG_HTTP_PORT:-3000}"
+    restart: unless-stopped
+    depends_on:
+      actual-events:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./state/actual-landg-pension
+        target: /app/data
+    logging: *default_logging
+
+  actual-monzo-pots:
+    profiles: ["monzo"]
+    image: ghcr.io/rjlee/actual-monzo-pots:api-${ACTUAL_API_MAJOR}
+    container_name: actual-monzo-pots
+    env_file:
+      - *shared_env_file
+      - ./env/actual-monzo-pots.env
+    environment:
+      <<: *common_env
+      HTTP_PORT: ${MONZO_HTTP_PORT}
+    ports:
+      - "${MONZO_HTTP_PORT:-3000}:${MONZO_HTTP_PORT:-3000}"
+    restart: unless-stopped
+    depends_on:
+      actual-events:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./state/actual-monzo-pots
+        target: /app/data
+    logging: *default_logging
+
+  actual-tx-linker:
+    profiles: ["linker"]
+    image: ghcr.io/rjlee/actual-tx-linker:api-${ACTUAL_API_MAJOR}
+    container_name: actual-tx-linker
+    env_file:
+      - *shared_env_file
+      - ./env/actual-tx-linker.env
+    environment:
+      <<: *common_env
+    restart: unless-stopped
+    command: ["--mode", "daemon"]
+    depends_on:
+      actual-events:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ./state/actual-tx-linker
+        target: /app/data
+    logging: *default_logging

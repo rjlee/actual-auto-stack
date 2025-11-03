@@ -1,0 +1,13 @@
+# Local environment files (secrets)
+.env
+.env.*
+!.env.example
+
+# Compose overrides
+docker-compose.override.yml
+
+# OS/editor noise
+.DS_Store
+*.swp
+*.tmp
+*~
