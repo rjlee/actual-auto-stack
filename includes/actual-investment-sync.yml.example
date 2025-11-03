@@ -3,8 +3,8 @@ services:
     image: ghcr.io/rjlee/actual-investment-sync:api-${ACTUAL_API_MAJOR}
     container_name: actual-investment-sync
     env_file:
-      - ./.env
-      - ./env/actual-investment-sync.env
+      - ../.env
+      - ../env/actual-investment-sync.env
     environment:
       BUDGET_DIR: /app/data/budget
       HTTP_PORT: ${INVEST_SYNC_HTTP_PORT}
@@ -16,11 +16,10 @@ services:
         condition: service_healthy
     volumes:
       - type: bind
-        source: ./state/actual-investment-sync
+        source: ../state/actual-investment-sync
         target: /app/data
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
-
