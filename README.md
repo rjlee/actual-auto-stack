@@ -56,7 +56,7 @@ Best practices
 Environment variables
 
 - Each service loads two env files in this order:
-  - The shared stack file: `./.env` (defaults common to all services)
+  - The shared stack file: `./.env` (defaults common to all services; includes shared Actual connection and events settings)
   - The service-specific file in this folder: `./env/<service>.env` (overrides shared for that service)
   - Because the service-specific file is listed last, its values override the shared defaults when keys overlap.
 - Variables defined inline under `environment:` in `stack/docker-compose.yml` take precedence over values from any `env_file`.
@@ -65,6 +65,7 @@ Environment variables
   - `ACTUAL_PASSWORD`
   - `ACTUAL_SYNC_ID`
   - `NODE_TLS_REJECT_UNAUTHORIZED` (set to `0` only if you accept insecure certificates)
+  - Events integration: `ENABLE_EVENTS`, `EVENTS_URL`, `EVENTS_AUTH_TOKEN`
 
 Example `stack/.env` (fill with your values):
 
