@@ -15,20 +15,12 @@ Stack usage
 - Start from the repo root:
   - `docker compose -f stack/docker-compose.yml --env-file stack/.env up -d`
 
-Single-service runs (profiles)
+Single-service runs
 
-- Each service is assigned a compose profile:
-  - events → actual-events
-  - categorise → actual-auto-categorise
-  - reconcile → actual-auto-reconcile
-  - invest → actual-investment-sync
-  - landg → actual-landg-pension
-  - monzo → actual-monzo-pots
-  - linker → actual-tx-linker
-- Run just one service (example: events):
-  - `docker compose -f stack/docker-compose.yml --env-file stack/.env --profile events up -d actual-events`
+- Start only one service (example: events):
+  - `docker compose -f stack/docker-compose.yml --env-file stack/.env up -d actual-events`
 - Bring down only that service:
-  - `docker compose -f stack/docker-compose.yml --env-file stack/.env --profile events down`
+  - `docker compose -f stack/docker-compose.yml --env-file stack/.env rm -sf actual-events`
 
 Notes
 
@@ -51,7 +43,7 @@ Data layout
 Best practices
 
 - Keep one budget cache per service (the default). Do not share budget directories between services to avoid concurrent-write issues.
-- Manage app configuration in each repo’s `.env` (under `../<repo>/.env`); the stack only controls image tags, startup order, and where data is persisted.
+- Manage app configuration in `stack/.env` (shared) and per-service overrides in `stack/env/<service>.env`; the stack controls image tags, startup order, and where data is persisted.
 
 Environment variables
 
