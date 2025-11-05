@@ -10,7 +10,7 @@ x-default-logging: &default_logging
 
 services:
   actual-events:
-    image: ghcr.io/rjlee/actual-events:api-${ACTUAL_API_MAJOR}
+    image: ghcr.io/rjlee/actual-events:${ACTUAL_IMAGE_TAG:-latest}
     container_name: actual-events
     env_file:
       - *shared_env_file
@@ -28,7 +28,7 @@ services:
     logging: *default_logging
 
   actual-auto-categorise:
-    image: ghcr.io/rjlee/actual-auto-categorise:api-${ACTUAL_API_MAJOR}
+    image: ghcr.io/rjlee/actual-auto-categorise:${ACTUAL_IMAGE_TAG:-latest}
     container_name: actual-auto-categorise
     env_file:
       - *shared_env_file
@@ -49,7 +49,7 @@ services:
     logging: *default_logging
 
   actual-auto-reconcile:
-    image: ghcr.io/rjlee/actual-auto-reconcile:api-${ACTUAL_API_MAJOR}
+    image: ghcr.io/rjlee/actual-auto-reconcile:${ACTUAL_IMAGE_TAG:-latest}
     container_name: actual-auto-reconcile
     env_file:
       - *shared_env_file
@@ -68,7 +68,7 @@ services:
     logging: *default_logging
 
   actual-tx-linker:
-    image: ghcr.io/rjlee/actual-tx-linker:api-${ACTUAL_API_MAJOR}
+    image: ghcr.io/rjlee/actual-tx-linker:${ACTUAL_IMAGE_TAG:-latest}
     container_name: actual-tx-linker
     env_file:
       - *shared_env_file

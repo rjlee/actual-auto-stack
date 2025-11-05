@@ -1,7 +1,7 @@
 Stack usage
 
 - Copy `stack/.env.example` to `stack/.env` and set values:
-  - `ACTUAL_API_MAJOR=25` (or desired major)
+  - `ACTUAL_IMAGE_TAG` to one of the current stable `@actual-app/api` tags published by `actual-auto-ci` (or leave unset to follow `latest`).
   - Optional: uncomment port variables to expose services on the host
 - Place service-specific `.env` files under `stack/env/` (copy the provided `*.env.example` to `*.env` and fill values):
   - `stack/env/actual-events.env`
@@ -12,8 +12,8 @@ Stack usage
   - `stack/env/actual-monzo-pots.env`
   - `stack/env/actual-tx-linker.env`
   - Each example includes common keys for that service (ports, scheduling, UI auth, provider creds); leave blank to inherit from the shared `stack/.env`.
- - Start from the repo root:
-  - `docker compose -f stack/docker-compose.yml --env-file stack/.env up -d`
+- Start from the repo root:
+- `docker compose -f stack/docker-compose.yml --env-file stack/.env up -d`
 
 User includes (modular snippets)
 
@@ -42,7 +42,7 @@ Notes
 
 - Startup order: `actual-events` defines a healthcheck and other services declare `depends_on: condition: service_healthy`, so they wait for `actual-events` to be healthy before starting.
 - Ports are enabled by default and read from `stack/.env` (`EVENTS_HTTP_PORT`, `CATEGORISE_HTTP_PORT`). Example ports for optional includes are commented in `stack/.env.example`.
-- All images use `api-${ACTUAL_API_MAJOR}` so switching API majors is a one-line change in `stack/.env`.
+- All images use a shared `ACTUAL_IMAGE_TAG` value so switching versions is a one-line change in `stack/.env`.
 
 Data layout
 
@@ -78,9 +78,18 @@ Environment variables
 Example `stack/.env` (fill with your values):
 
 ```
-ACTUAL_API_MAJOR=25
+ACTUAL_IMAGE_TAG=25.11.0 # or leave unset to use :latest
 ACTUAL_SERVER_URL=https://your-actual-server:5006/
 ACTUAL_PASSWORD=...
 ACTUAL_SYNC_ID=...
 NODE_TLS_REJECT_UNAUTHORIZED=0
 ```
+
+Tag policy
+
+- We publish stable `@actual-app/api` version tags (exact semver) and `latest` (alias of the highest stable).
+- To discover the current tags, see the Release Strategy in `rjlee/actual-auto-ci` and/or the GHCR package page for each repo.
+
+Important
+
+- Keep the container tag consistent with the `@actual-app/api` version your Actual Budget server uses.
