@@ -1,95 +1,88 @@
-Stack usage
+# actual-auto-stack
 
-- Copy `stack/.env.example` to `stack/.env` and set values:
-  - `ACTUAL_IMAGE_TAG` to one of the current stable `@actual-app/api` tags published by `actual-auto-ci` (or leave unset to follow `latest`).
-  - Optional: uncomment port variables to expose services on the host
-- Place service-specific `.env` files under `stack/env/` (copy the provided `*.env.example` to `*.env` and fill values):
-  - `stack/env/actual-events.env`
-  - `stack/env/actual-auto-categorise.env`
-  - `stack/env/actual-auto-reconcile.env`
-  - `stack/env/actual-investment-sync.env`
-  - `stack/env/actual-landg-pension.env`
-  - `stack/env/actual-monzo-pots.env`
-  - `stack/env/actual-tx-linker.env`
-  - Each example includes common keys for that service (ports, scheduling, UI auth, provider creds); leave blank to inherit from the shared `stack/.env`.
-- Start from the repo root:
-- `docker compose -f stack/docker-compose.yml --env-file stack/.env up -d`
+Docker Compose bundle for the `actual-*` sidecars. Brings the services up against a shared Actual Budget server with consistent configuration, health checks, and persistent state.
 
-User includes (modular snippets)
+## Features
 
-- Create `stack/docker-compose.override.yml` by copying the example:
-  - `cp stack/docker-compose.override.yml.example stack/docker-compose.override.yml`
-- The override file uses the Compose `include` directive to load any service snippets you enable under `stack/includes/`.
-- Example includes (provided as `.yml.example`):
-  - `stack/includes/actual-investment-sync.yml.example`
-  - `stack/includes/actual-monzo-pots.yml.example`
-  - `stack/includes/actual-landg-pension.yml.example`
-- Enable a service by creating the referenced `.yml` file:
-  - `cp stack/includes/actual-investment-sync.yml.example stack/includes/actual-investment-sync.yml`
-  - Repeat for others as needed.
-- Then run the normal `docker compose` command and the override will be merged automatically.
+- Central `.env` for shared Actual credentials, image tags, and port assignments.
+- Per-service overrides in `env/*.env` plus include snippets for optional services.
+- Health-aware startup using container `HEALTHCHECK`s and `depends_on` conditions.
+- Persistent volumes under `state/<service>` with isolated budget caches.
 
-Note: the include directive requires Docker Compose v2.20+ (`docker compose version`).
+## Requirements
 
-Single-service runs
+- Docker Engine and Docker Compose v2.20+ (required for `include` support).
+- Access to an Actual Budget server (`ACTUAL_SERVER_URL`, `ACTUAL_PASSWORD`, `ACTUAL_SYNC_ID`).
+- Image tags published by [`actual-auto-ci`](https://github.com/rjlee/actual-auto-ci) (set via `ACTUAL_IMAGE_TAG`).
 
-- Start only one service (example: events):
-  - `docker compose -f stack/docker-compose.yml --env-file stack/.env up -d actual-events`
-- Bring down only that service:
-  - `docker compose -f stack/docker-compose.yml --env-file stack/.env rm -sf actual-events`
+## Installation
 
-Notes
-
-- Startup order: `actual-events` defines a healthcheck and other services declare `depends_on: condition: service_healthy`, so they wait for `actual-events` to be healthy before starting.
-- Ports are enabled by default and read from `stack/.env` (`EVENTS_HTTP_PORT`, `CATEGORISE_HTTP_PORT`). Example ports for optional includes are commented in `stack/.env.example`.
-- All images use a shared `ACTUAL_IMAGE_TAG` value so switching versions is a one-line change in `stack/.env`.
-
-Data layout
-
-- Each service mounts a single bind under this folder: `./state/<service-name> -> /app/data`.
-- The Actual budget cache lives inside that mount at `/app/data/budget` (set via `BUDGET_DIR=/app/data/budget`).
-- Example on disk after running:
-  - `stack/state/actual-events/...`
-  - `stack/state/actual-auto-categorise/budget/...` and model/state in `stack/state/actual-auto-categorise/...`
-  - `stack/state/actual-auto-reconcile/budget/...`
-  - `stack/state/actual-investment-sync/budget/...`
-  - `stack/state/actual-landg-pension/budget/...`
-- `stack/state/actual-monzo-pots/budget/...`
-
-Best practices
-
-- Keep one budget cache per service (the default). Do not share budget directories between services to avoid concurrent-write issues.
-- Manage app configuration in `stack/.env` (shared) and per-service overrides in `stack/env/<service>.env`; the stack controls image tags, startup order, and where data is persisted.
-
-Environment variables
-
-- Each service loads two env files in this order:
-  - The shared stack file: `./.env` (defaults common to all services; includes shared Actual connection and events settings)
-  - The service-specific file in this folder: `./env/<service>.env` (overrides shared for that service)
-  - Because the service-specific file is listed last, its values override the shared defaults when keys overlap.
-- Variables defined inline under `environment:` in `stack/docker-compose.yml` take precedence over values from any `env_file`.
-- Shared keys you can set once in `stack/.env` and reuse across all services:
-  - `ACTUAL_SERVER_URL`
-  - `ACTUAL_PASSWORD`
-  - `ACTUAL_SYNC_ID`
-  - `NODE_TLS_REJECT_UNAUTHORIZED` (set to `0` only if you accept insecure certificates)
-  - Events integration: `ENABLE_EVENTS`, `EVENTS_URL`, `EVENTS_AUTH_TOKEN`
-
-Example `stack/.env` (fill with your values):
-
-```
-ACTUAL_IMAGE_TAG=25.11.0 # or leave unset to use :latest
-ACTUAL_SERVER_URL=https://your-actual-server:5006/
-ACTUAL_PASSWORD=...
-ACTUAL_SYNC_ID=...
-NODE_TLS_REJECT_UNAUTHORIZED=0
+```bash
+git clone https://github.com/rjlee/actual-auto-stack.git
+cd actual-auto-stack
 ```
 
-Tag policy
+### Docker quick start
 
-- We publish stable `@actual-app/api` version tags (exact semver) and `latest` (alias of the highest stable).
-- To discover the current tags, see the Release Strategy in `rjlee/actual-auto-ci` and/or the GHCR package page for each repo.
+```bash
+cp .env.example .env
+for f in env/*.env.example; do cp "$f" "${f%.example}"; done
+# (Optional) enable extra services
+for f in includes/*.yml.example; do cp "$f" "${f%.example}"; done
 
-Important
+docker compose --env-file .env up -d
+```
 
-- Keep the container tag consistent with the `@actual-app/api` version your Actual Budget server uses.
+## Configuration
+
+- `.env` – shared defaults (Actual credentials, image tag, ports).
+- `env/*.env` – service-specific overrides (copy from `.env.example` siblings).
+- `includes/*.yml` – optional Compose fragments; copy the `.example` files you need and reference them with `docker compose -f docker-compose.yml -f includes/<service>.yml up`.
+
+Precedence: values supplied via `docker compose ... --env-file` > per-service env files > `.env`.
+
+| Setting                | Description                                             | Default          |
+| ---------------------- | ------------------------------------------------------- | ---------------- |
+| `ACTUAL_IMAGE_TAG`     | Image tag applied to all services (matches API version) | unset (`latest`) |
+| `ACTUAL_SERVER_URL`    | Actual Budget server URL                                | required         |
+| `ACTUAL_PASSWORD`      | Actual server password                                  | required         |
+| `ACTUAL_SYNC_ID`       | Budget sync ID                                          | required         |
+| `ENABLE_EVENTS`        | Toggle event-driven behaviour across services           | unset            |
+| `EVENTS_URL`           | Shared `actual-events` endpoint for SSE subscribers     | unset            |
+| `EVENTS_AUTH_TOKEN`    | Bearer token for secured SSE endpoints                  | unset            |
+| `EVENTS_HTTP_PORT`     | Host port for `actual-events` when included             | `3000`           |
+| `CATEGORISE_HTTP_PORT` | Host port for `actual-auto-categorise` UI               | `3001`           |
+
+Refer to each service README for additional keys exposed via `env/<service>.env`.
+
+## Usage
+
+### Common commands
+
+```bash
+# Launch core services
+docker compose --env-file .env up -d
+
+# Include optional services
+docker compose --env-file .env -f docker-compose.yml -f includes/actual-monzo-pots.yml up -d
+
+# Check status / logs
+docker compose --env-file .env ps
+docker compose --env-file .env logs -f actual-events
+
+# Stop everything
+docker compose --env-file .env down
+```
+
+Each service stores data under `state/<service>`. Budget caches live in `state/<service>/budget`; other artefacts (tokens, models, mappings) share the same root.
+
+## Image tags
+
+- Set `ACTUAL_IMAGE_TAG` (e.g. `26.1.0`) to pin every service to a specific `@actual-app/api` release.
+- Leave `ACTUAL_IMAGE_TAG` empty to follow `latest` (highest supported API version published by `actual-auto-ci`).
+
+Individual service READMEs describe additional tags and compatibility notes.
+
+## License
+
+MIT © contributors.
