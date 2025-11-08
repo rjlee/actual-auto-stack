@@ -122,7 +122,7 @@ services:
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
       - "traefik.http.middlewares.categorise-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto,Cookie"
       - traefik.http.middlewares.categorise-trim.stripprefix.prefixes=/categorise
-      - traefik.http.middlewares.categorise-chain.chain.middlewares=categorise-trim@docker,categorise-static-headers@docker,categorise-forwardauth@docker
+      - traefik.http.middlewares.categorise-chain.chain.middlewares=categorise-static-headers@docker,categorise-forwardauth@docker,categorise-trim@docker
 
   actual-auto-reconcile:
     image: ghcr.io/rjlee/actual-auto-reconcile:${ACTUAL_IMAGE_TAG:-latest}
