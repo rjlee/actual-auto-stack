@@ -94,6 +94,7 @@ services:
     environment:
       <<: *common_env
       AUTH_COOKIE_NAME: ${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
+      HTTP_PORT: ${CATEGORISE_HTTP_PORT:-3000}
     restart: unless-stopped
     depends_on:
       actual-events:
@@ -111,7 +112,7 @@ services:
       - traefik.http.routers.categorise.rule=PathPrefix(`/categorise`)
       - traefik.http.routers.categorise.entrypoints=web
       - traefik.http.routers.categorise.middlewares=categorise-chain@docker
-      - traefik.http.services.categorise.loadbalancer.server.port=${HTTP_PORT:-3000}
+      - traefik.http.services.categorise.loadbalancer.server.port=${CATEGORISE_HTTP_PORT:-3000}
       - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-App-Name=${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}
       - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
