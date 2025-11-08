@@ -43,7 +43,10 @@ services:
       - traefik.http.routers.categorise-auth.rule=PathPrefix(`/auth`)
       - traefik.http.routers.categorise-auth.entrypoints=web
       - traefik.http.routers.categorise-auth.priority=100
+      - traefik.http.routers.categorise-auth.middlewares=categorise-auth-headers@docker
       - traefik.http.services.categorise-auth.loadbalancer.server.port=4000
+      - "traefik.http.middlewares.categorise-auth-headers.headers.customrequestheaders.X-Actual-App-Name=${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}"
+      - "traefik.http.middlewares.categorise-auth-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}"
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
