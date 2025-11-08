@@ -80,6 +80,7 @@ services:
       AUTH_COOKIE_NAME: ${AUTH_FORWARD_COOKIE_NAME:-actual-auth}
     labels:
       - traefik.enable=true
+      - traefik.docker.network=actual-auto-stack_proxy
       - traefik.http.routers.auth.rule=PathPrefix(`/auth`)
       - traefik.http.routers.auth.entrypoints=web
       - traefik.http.routers.auth.priority=100
@@ -109,6 +110,7 @@ services:
       - proxy
     labels:
       - traefik.enable=true
+      - traefik.docker.network=actual-auto-stack_proxy
       - traefik.http.routers.categorise.rule=PathPrefix(`/categorise`)
       - traefik.http.routers.categorise.entrypoints=web
       - traefik.http.routers.categorise.middlewares=categorise-chain@docker
