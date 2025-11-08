@@ -36,25 +36,25 @@ docker compose --env-file .env up -d
 ## Configuration
 
 - `.env` – shared defaults (Actual credentials, image tag, ports).
-- `env/*.env` – service-specific overrides (copy from `.env.example` siblings). For example, `env/actual-auto-categorise.env` now controls the shared auth gateway headers (`CATEGORISE_LOGIN_NAME`, `CATEGORISE_AUTH_COOKIE_NAME`, optional `AUTH_FORWARD_IMAGE`) used by Traefik.
+- `env/*.env` – service-specific overrides (copy from `.env.example` siblings). For example, `env/actual-auto-categorise.env` controls the auth headers (`CATEGORISE_LOGIN_NAME`, `CATEGORISE_AUTH_COOKIE_NAME`) that Traefik sends to the shared gateway, while `env/auth.env` provides the secrets for `actual-auto-auth`.
 - `includes/*.yml` – optional Compose fragments; copy the `.example` files you need and reference them with `docker compose -f docker-compose.yml -f includes/<service>.yml up`.
 
 Precedence: values supplied via `docker compose ... --env-file` > per-service env files > `.env`.
 
-| Setting                       | Description                                                     | Default                                 |
-| ----------------------------- | --------------------------------------------------------------- | --------------------------------------- |
-| `ACTUAL_IMAGE_TAG`            | Image tag applied to all services (matches API version)         | unset (`latest`)                        |
-| `ACTUAL_SERVER_URL`           | Actual Budget server URL                                        | required                                |
-| `ACTUAL_PASSWORD`             | Actual server password                                          | required                                |
-| `ACTUAL_SYNC_ID`              | Budget sync ID                                                  | required                                |
-| `ENABLE_EVENTS`               | Toggle event-driven behaviour across services                   | unset                                   |
-| `EVENTS_URL`                  | Shared `actual-events` endpoint for SSE subscribers             | unset                                   |
-| `EVENTS_AUTH_TOKEN`           | Bearer token for secured SSE endpoints                          | unset                                   |
-| `EVENTS_HTTP_PORT`            | Host port for `actual-events` when included                     | `3000`                                  |
-| `CATEGORISE_HTTP_PORT`        | Host port for the Traefik front-end to `actual-auto-categorise` | `3001`                                  |
-| `AUTH_FORWARD_IMAGE`          | Auth gateway image tag (defaults to GHCR latest)                | `ghcr.io/rjlee/actual-auto-auth:latest` |
-| `CATEGORISE_LOGIN_NAME`       | Login heading injected via Traefik header                       | `Actual Auto Categorise`                |
-| `CATEGORISE_AUTH_COOKIE_NAME` | Cookie name shared between the UI and auth gateway              | `categorise-auth`                       |
+| Setting                       | Description                                                | Default                                 |
+| ----------------------------- | ---------------------------------------------------------- | --------------------------------------- |
+| `ACTUAL_IMAGE_TAG`            | Image tag applied to all services (matches API version)    | unset (`latest`)                        |
+| `ACTUAL_SERVER_URL`           | Actual Budget server URL                                   | required                                |
+| `ACTUAL_PASSWORD`             | Actual server password                                     | required                                |
+| `ACTUAL_SYNC_ID`              | Budget sync ID                                             | required                                |
+| `ENABLE_EVENTS`               | Toggle event-driven behaviour across services              | unset                                   |
+| `EVENTS_URL`                  | Shared `actual-events` endpoint for SSE subscribers        | unset                                   |
+| `EVENTS_AUTH_TOKEN`           | Bearer token for secured SSE endpoints                     | unset                                   |
+| `STACK_HTTP_PORT`             | Host port exposed by the shared Traefik proxy              | `3000`                                  |
+| `EVENTS_HTTP_PORT`            | Internal port for `actual-events` (still defaults to 3000) | `3000`                                  |
+| `AUTH_FORWARD_IMAGE`          | Auth gateway image tag (defaults to GHCR latest)           | `ghcr.io/rjlee/actual-auto-auth:latest` |
+| `CATEGORISE_LOGIN_NAME`       | Login heading injected via Traefik header                  | `Actual Auto Categorise`                |
+| `CATEGORISE_AUTH_COOKIE_NAME` | Cookie name shared between the UI and auth gateway         | `categorise-auth`                       |
 
 Refer to each service README for additional keys exposed via `env/<service>.env`.
 
@@ -78,6 +78,12 @@ docker compose --env-file .env down
 ```
 
 Each service stores data under `state/<service>`. Budget caches live in `state/<service>/budget`; other artefacts (tokens, models, mappings) share the same root.
+
+### Accessing the UIs
+
+- `http://<host>:${STACK_HTTP_PORT:-3000}/dashboard/` – Traefik dashboard (lists routers/services and is secured by the shared auth gateway).
+- `http://<host>:${STACK_HTTP_PORT:-3000}/categorise/` – Actual Auto Categorise UI.
+  (Add additional path-based routers for other UIs using the same pattern.)
 
 ## Image tags
 

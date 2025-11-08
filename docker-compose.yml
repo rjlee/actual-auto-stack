@@ -9,6 +9,44 @@ x-default-logging: &default_logging
     max-file: "3"
 
 services:
+  traefik:
+    image: traefik:2.11
+    container_name: actual-auto-traefik
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --api=true
+      - --api.dashboard=true
+    ports:
+      - "${STACK_HTTP_PORT:-3000}:80"
+    networks:
+      - proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - actual-auto-auth
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.dashboard.rule=PathPrefix(`/dashboard`) || PathPrefix(`/api`)
+      - traefik.http.routers.dashboard.entrypoints=web
+      - traefik.http.routers.dashboard.middlewares=dashboard-chain@docker
+      - traefik.http.routers.dashboard.service=api@internal
+      - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Actual-App-Name=Traefik Dashboard
+      - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Actual-Cookie-Name=dashboard-auth
+      - traefik.http.middlewares.dashboard-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check?app=Traefik%20Dashboard&cookie=dashboard-auth
+      - traefik.http.middlewares.dashboard-forwardauth.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.dashboard-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
+      - traefik.http.middlewares.dashboard-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name
+      - traefik.http.middlewares.dashboard-chain.chain.middlewares=dashboard-headers@docker,dashboard-forwardauth@docker
+      - traefik.http.routers.root.rule=Path(`/`)
+      - traefik.http.routers.root.entrypoints=web
+      - traefik.http.routers.root.middlewares=dashboard-redirect@docker
+      - traefik.http.routers.root.service=api@internal
+      - traefik.http.middlewares.dashboard-redirect.redirectregex.regex=^/$
+      - traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=/dashboard/
+      - traefik.http.middlewares.dashboard-redirect.redirectregex.permanent=true
+
   actual-events:
     image: ghcr.io/rjlee/actual-events:${ACTUAL_IMAGE_TAG:-latest}
     container_name: actual-events
@@ -32,42 +70,17 @@ services:
     container_name: actual-auto-auth
     env_file:
       - *shared_env_file
-      - ./env/actual-auto-categorise.env
-    environment:
-      AUTH_COOKIE_NAME: ${AUTH_FORWARD_COOKIE_NAME:-actual-auth}
+      - ./env/auth.env
     restart: unless-stopped
     networks:
-      - categorise_proxy
+      - proxy
+      - default
     labels:
       - traefik.enable=true
-      - traefik.http.routers.categorise-auth.rule=PathPrefix(`/auth`)
-      - traefik.http.routers.categorise-auth.entrypoints=web
-      - traefik.http.routers.categorise-auth.priority=100
-      - traefik.http.routers.categorise-auth.middlewares=categorise-auth-headers@docker
-      - traefik.http.services.categorise-auth.loadbalancer.server.port=4000
-      - "traefik.http.middlewares.categorise-auth-headers.headers.customrequestheaders.X-Actual-App-Name=${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}"
-      - "traefik.http.middlewares.categorise-auth-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}"
-      - traefik.http.middlewares.categorise-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
-      - traefik.http.middlewares.categorise-forwardauth.forwardauth.trustForwardHeader=true
-      - traefik.http.middlewares.categorise-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
-      - traefik.http.middlewares.categorise-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name
-
-  traefik-categorise:
-    image: traefik:2.11
-    container_name: actual-auto-categorise-traefik
-    command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      - --entrypoints.web.address=:80
-    ports:
-      - "${CATEGORISE_HTTP_PORT:-3001}:80"
-    networks:
-      - categorise_proxy
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    depends_on:
-      - actual-auto-categorise
-      - actual-auto-auth
+      - traefik.http.routers.auth.rule=PathPrefix(`/auth`)
+      - traefik.http.routers.auth.entrypoints=web
+      - traefik.http.routers.auth.priority=100
+      - traefik.http.services.auth.loadbalancer.server.port=4000
 
   actual-auto-categorise:
     image: ghcr.io/rjlee/actual-auto-categorise:${ACTUAL_IMAGE_TAG:-latest}
@@ -89,16 +102,21 @@ services:
     logging: *default_logging
     networks:
       - default
-      - categorise_proxy
+      - proxy
     labels:
       - traefik.enable=true
-      - traefik.http.routers.categorise.rule=PathPrefix(`/`)
+      - traefik.http.routers.categorise.rule=PathPrefix(`/categorise`)
       - traefik.http.routers.categorise.entrypoints=web
       - traefik.http.routers.categorise.middlewares=categorise-chain@docker
       - traefik.http.services.categorise.loadbalancer.server.port=${HTTP_PORT:-3000}
       - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-App-Name=${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}
       - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
-      - traefik.http.middlewares.categorise-chain.chain.middlewares=categorise-static-headers@docker,categorise-forwardauth@docker
+      - traefik.http.middlewares.categorise-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check?app=${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}&cookie=${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
+      - traefik.http.middlewares.categorise-forwardauth.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.categorise-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
+      - traefik.http.middlewares.categorise-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name
+      - traefik.http.middlewares.categorise-trim.stripprefix.prefixes=/categorise
+      - traefik.http.middlewares.categorise-chain.chain.middlewares=categorise-trim@docker,categorise-static-headers@docker,categorise-forwardauth@docker
 
   actual-auto-reconcile:
     image: ghcr.io/rjlee/actual-auto-reconcile:${ACTUAL_IMAGE_TAG:-latest}
@@ -139,4 +157,4 @@ services:
     logging: *default_logging
 
 networks:
-  categorise_proxy:
+  proxy:
