@@ -27,6 +27,45 @@ services:
         target: /app/data
     logging: *default_logging
 
+  actual-auto-auth:
+    image: ${AUTH_FORWARD_IMAGE:-ghcr.io/rjlee/actual-auto-auth:latest}
+    container_name: actual-auto-auth
+    env_file:
+      - *shared_env_file
+      - ./env/actual-auto-categorise.env
+    environment:
+      AUTH_COOKIE_NAME: ${AUTH_FORWARD_COOKIE_NAME:-actual-auth}
+    restart: unless-stopped
+    networks:
+      - categorise_proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.categorise-auth.rule=PathPrefix(`/auth`)
+      - traefik.http.routers.categorise-auth.entrypoints=web
+      - traefik.http.routers.categorise-auth.priority=100
+      - traefik.http.services.categorise-auth.loadbalancer.server.port=4000
+      - traefik.http.middlewares.categorise-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
+      - traefik.http.middlewares.categorise-forwardauth.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.categorise-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
+      - traefik.http.middlewares.categorise-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name
+
+  traefik-categorise:
+    image: traefik:2.11
+    container_name: actual-auto-categorise-traefik
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "${CATEGORISE_HTTP_PORT:-3001}:80"
+    networks:
+      - categorise_proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - actual-auto-categorise
+      - actual-auto-auth
+
   actual-auto-categorise:
     image: ghcr.io/rjlee/actual-auto-categorise:${ACTUAL_IMAGE_TAG:-latest}
     container_name: actual-auto-categorise
@@ -35,9 +74,7 @@ services:
       - ./env/actual-auto-categorise.env
     environment:
       <<: *common_env
-      HTTP_PORT: ${CATEGORISE_HTTP_PORT}
-    ports:
-      - "${CATEGORISE_HTTP_PORT:-3000}:${CATEGORISE_HTTP_PORT:-3000}"
+      AUTH_COOKIE_NAME: ${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
     restart: unless-stopped
     depends_on:
       actual-events:
@@ -47,6 +84,18 @@ services:
         source: ./state/actual-auto-categorise
         target: /app/data
     logging: *default_logging
+    networks:
+      - default
+      - categorise_proxy
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.categorise.rule=PathPrefix(`/`)
+      - traefik.http.routers.categorise.entrypoints=web
+      - traefik.http.routers.categorise.middlewares=categorise-chain@docker
+      - traefik.http.services.categorise.loadbalancer.server.port=${HTTP_PORT:-3000}
+      - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-App-Name=${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}
+      - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
+      - traefik.http.middlewares.categorise-chain.chain.middlewares=categorise-static-headers@docker,categorise-forwardauth@docker
 
   actual-auto-reconcile:
     image: ghcr.io/rjlee/actual-auto-reconcile:${ACTUAL_IMAGE_TAG:-latest}
@@ -85,3 +134,6 @@ services:
         source: ./state/actual-tx-linker
         target: /app/data
     logging: *default_logging
+
+networks:
+  categorise_proxy:

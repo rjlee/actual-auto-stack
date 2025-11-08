@@ -36,7 +36,7 @@ docker compose --env-file .env up -d
 ## Configuration
 
 - `.env` – shared defaults (Actual credentials, image tag, ports).
-- `env/*.env` – service-specific overrides (copy from `.env.example` siblings).
+- `env/*.env` – service-specific overrides (copy from `.env.example` siblings). For example, `env/actual-auto-categorise.env` now controls the shared auth gateway headers (`CATEGORISE_LOGIN_NAME`, `CATEGORISE_AUTH_COOKIE_NAME`, optional `AUTH_FORWARD_IMAGE`) used by Traefik.
 - `includes/*.yml` – optional Compose fragments; copy the `.example` files you need and reference them with `docker compose -f docker-compose.yml -f includes/<service>.yml up`.
 
 Precedence: values supplied via `docker compose ... --env-file` > per-service env files > `.env`.
@@ -51,7 +51,10 @@ Precedence: values supplied via `docker compose ... --env-file` > per-service en
 | `EVENTS_URL`           | Shared `actual-events` endpoint for SSE subscribers     | unset            |
 | `EVENTS_AUTH_TOKEN`    | Bearer token for secured SSE endpoints                  | unset            |
 | `EVENTS_HTTP_PORT`     | Host port for `actual-events` when included             | `3000`           |
-| `CATEGORISE_HTTP_PORT` | Host port for `actual-auto-categorise` UI               | `3001`           |
+| `CATEGORISE_HTTP_PORT` | Host port for the Traefik front-end to `actual-auto-categorise` | `3001`           |
+| `AUTH_FORWARD_IMAGE`   | Auth gateway image tag (defaults to GHCR latest)        | `ghcr.io/rjlee/actual-auto-auth:latest` |
+| `CATEGORISE_LOGIN_NAME`| Login heading injected via Traefik header               | `Actual Auto Categorise` |
+| `CATEGORISE_AUTH_COOKIE_NAME` | Cookie name shared between the UI and auth gateway | `categorise-auth` |
 
 Refer to each service README for additional keys exposed via `env/<service>.env`.
 
