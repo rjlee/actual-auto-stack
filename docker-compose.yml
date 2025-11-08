@@ -70,11 +70,12 @@ services:
     container_name: actual-auto-auth
     env_file:
       - *shared_env_file
-      - ./env/auth.env
     restart: unless-stopped
     networks:
       - proxy
       - default
+    environment:
+      AUTH_COOKIE_NAME: ${AUTH_FORWARD_COOKIE_NAME:-actual-auth}
     labels:
       - traefik.enable=true
       - traefik.http.routers.auth.rule=PathPrefix(`/auth`)

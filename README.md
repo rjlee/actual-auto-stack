@@ -36,7 +36,7 @@ docker compose --env-file .env up -d
 ## Configuration
 
 - `.env` – shared defaults (Actual credentials, image tag, ports).
-- `env/*.env` – service-specific overrides (copy from `.env.example` siblings). For example, `env/actual-auto-categorise.env` controls the auth headers (`CATEGORISE_LOGIN_NAME`, `CATEGORISE_AUTH_COOKIE_NAME`) that Traefik sends to the shared gateway, while `env/auth.env` provides the secrets for `actual-auto-auth`.
+- `env/*.env` – service-specific overrides (copy from `.env.example` siblings). For example, `env/actual-auto-categorise.env` controls the auth headers (`CATEGORISE_LOGIN_NAME`, `CATEGORISE_AUTH_COOKIE_NAME`) that Traefik sends to the shared gateway, and the root `.env` file now holds the auth gateway defaults (image tag, session secret, cookie name).
 - `includes/*.yml` – optional Compose fragments; copy the `.example` files you need and reference them with `docker compose -f docker-compose.yml -f includes/<service>.yml up`.
 
 Precedence: values supplied via `docker compose ... --env-file` > per-service env files > `.env`.
