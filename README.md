@@ -55,6 +55,12 @@ Precedence: values supplied via `docker compose ... --env-file` > per-service en
 | `AUTH_FORWARD_IMAGE`          | Auth gateway image tag (defaults to GHCR latest)           | `ghcr.io/rjlee/actual-auto-auth:latest` |
 | `CATEGORISE_LOGIN_NAME`       | Login heading injected via Traefik header                  | `Actual Auto Categorise`                |
 | `CATEGORISE_AUTH_COOKIE_NAME` | Cookie name shared between the UI and auth gateway         | `categorise-auth`                       |
+| `STACK_HOME_TITLE`            | Heading shown on the authenticated home page (`/`)         | `Actual Automation Stack`               |
+| `STACK_NAV_LINKS`             | Extra stack links (format `Label|/path;Another|https://…`) | unset                                   |
+| `STACK_INCLUDE_DEFAULT_LINKS` | Set to `false` to drop built-in Traefik/Categorise links   | `true`                                  |
+| `STACK_INCLUDE_CATEGORISE_LINK` | Toggle the Categorise shortcut without disabling defaults | `true`                                  |
+
+The Compose file automatically exports `STACK_LINK_*` / `STACK_LABEL_*` pairs for bundled services (e.g. Traefik dashboard, Categorise UI). Add your own by defining similar variables in `.env` or optional include files so they appear on the auth home page.
 
 Refer to each service README for additional keys exposed via `env/<service>.env`.
 
@@ -81,9 +87,10 @@ Each service stores data under `state/<service>`. Budget caches live in `state/<
 
 ### Accessing the UIs
 
+- `http://<host>:${STACK_HTTP_PORT:-3000}/` – Authenticated home page with shortcuts to enabled services (links auto-generated from `STACK_LINK_*`, `STACK_NAV_LINKS`, and the defaults above).
 - `http://<host>:${STACK_HTTP_PORT:-3000}/dashboard/` – Traefik dashboard (lists routers/services and is secured by the shared auth gateway).
 - `http://<host>:${STACK_HTTP_PORT:-3000}/categorise/` – Actual Auto Categorise UI.
-  (Add additional path-based routers for other UIs using the same pattern.)
+  (Add additional path-based routers for other UIs using the same pattern; set `STACK_LINK_*`/`STACK_LABEL_*` for automatic inclusion on the home page.)
 
 ## Image tags
 

@@ -43,11 +43,15 @@ services:
       - traefik.http.middlewares.dashboard-chain.chain.middlewares=dashboard-headers@docker,dashboard-forwardauth@docker
       - traefik.http.routers.root.rule=Path(`/`)
       - traefik.http.routers.root.entrypoints=web
-      - traefik.http.routers.root.middlewares=dashboard-redirect@docker
-      - traefik.http.routers.root.service=api@internal
-      - traefik.http.middlewares.dashboard-redirect.redirectregex.regex=^/$
-      - traefik.http.middlewares.dashboard-redirect.redirectregex.replacement=/dashboard/
-      - traefik.http.middlewares.dashboard-redirect.redirectregex.permanent=true
+      - traefik.http.routers.root.middlewares=home-chain@docker
+      - traefik.http.routers.root.service=auth@docker
+      - traefik.http.middlewares.home-headers.headers.customrequestheaders.X-Actual-App-Name=${STACK_HOME_TITLE:-Actual Automation Stack}
+      - traefik.http.middlewares.home-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${AUTH_FORWARD_COOKIE_NAME:-actual-auth}
+      - traefik.http.middlewares.home-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
+      - traefik.http.middlewares.home-forwardauth.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.home-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
+      - "traefik.http.middlewares.home-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto,Cookie"
+      - traefik.http.middlewares.home-chain.chain.middlewares=home-headers@docker,home-forwardauth@docker
 
   actual-events:
     image: ghcr.io/rjlee/actual-events:${ACTUAL_IMAGE_TAG:-latest}
@@ -78,6 +82,15 @@ services:
       - default
     environment:
       AUTH_COOKIE_NAME: ${AUTH_FORWARD_COOKIE_NAME:-actual-auth}
+      STACK_HOME_TITLE: ${STACK_HOME_TITLE:-Actual Automation Stack}
+      STACK_NAV_LINKS: ${STACK_NAV_LINKS:-}
+      STACK_INCLUDE_DEFAULT_LINKS: ${STACK_INCLUDE_DEFAULT_LINKS:-true}
+      STACK_INCLUDE_CATEGORISE_LINK: ${STACK_INCLUDE_CATEGORISE_LINK:-true}
+      CATEGORISE_LOGIN_NAME: ${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}
+      STACK_LINK_TRAEFIK_DASHBOARD: /dashboard/
+      STACK_LABEL_TRAEFIK_DASHBOARD: ${STACK_DASHBOARD_NAME:-Traefik Dashboard}
+      STACK_LINK_ACTUAL_AUTO_CATEGORISE: /categorise/
+      STACK_LABEL_ACTUAL_AUTO_CATEGORISE: ${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}
     labels:
       - traefik.enable=true
       - traefik.docker.network=actual-auto-stack_proxy
