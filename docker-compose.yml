@@ -39,7 +39,7 @@ services:
       - traefik.http.middlewares.dashboard-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.dashboard-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.dashboard-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
-      - "traefik.http.middlewares.dashboard-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto"
+      - "traefik.http.middlewares.dashboard-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto,Cookie"
       - traefik.http.middlewares.dashboard-chain.chain.middlewares=dashboard-headers@docker,dashboard-forwardauth@docker
       - traefik.http.routers.root.rule=Path(`/`)
       - traefik.http.routers.root.entrypoints=web
@@ -117,7 +117,7 @@ services:
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
-      - "traefik.http.middlewares.categorise-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto"
+      - "traefik.http.middlewares.categorise-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto,Cookie"
       - traefik.http.middlewares.categorise-trim.stripprefix.prefixes=/categorise
       - traefik.http.middlewares.categorise-chain.chain.middlewares=categorise-trim@docker,categorise-static-headers@docker,categorise-forwardauth@docker
 
