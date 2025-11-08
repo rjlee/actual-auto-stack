@@ -34,7 +34,7 @@ services:
       - traefik.http.routers.dashboard.service=api@internal
       - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Actual-App-Name=Traefik Dashboard
       - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Actual-Cookie-Name=dashboard-auth
-      - traefik.http.middlewares.dashboard-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check?app=Traefik%20Dashboard&cookie=dashboard-auth
+      - traefik.http.middlewares.dashboard-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.dashboard-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.dashboard-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
       - traefik.http.middlewares.dashboard-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name
@@ -112,7 +112,7 @@ services:
       - traefik.http.services.categorise.loadbalancer.server.port=${HTTP_PORT:-3000}
       - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-App-Name=${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}
       - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
-      - traefik.http.middlewares.categorise-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check?app=${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}&cookie=${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
+      - traefik.http.middlewares.categorise-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name
