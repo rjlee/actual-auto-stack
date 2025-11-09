@@ -41,10 +41,11 @@ services:
       - traefik.http.middlewares.landg-trim.stripprefix.prefixes=/landg
       - traefik.http.middlewares.landg-chain.chain.middlewares=landg-static-headers@docker,landg-forwardauth@docker,landg-trim@docker
 
-# When enabling this include, create `env/actual-landg-pension.env` (or extend an existing env file)
-# with values such as:
-#   LANDG_LOGIN_NAME="Actual LandG Pension"
-#   LANDG_AUTH_COOKIE_NAME=landg-auth
-#   STACK_LINK_ACTUAL_LANDG_PENSION=/landg/
-#   STACK_LABEL_ACTUAL_LANDG_PENSION="${LANDG_LOGIN_NAME}"
-# so the shared auth gateway can surface a shortcut on the home page.
+# When enabling this include:
+#   • Update `env/actual-landg-pension.env` with, for example:
+#       LANDG_LOGIN_NAME="Actual LandG Pension"
+#       LANDG_AUTH_COOKIE_NAME=landg-auth
+#   • Add the matching shortcut to `env/actual-auto-auth.env`, for example:
+#       STACK_LINK_ACTUAL_LANDG_PENSION=/landg/
+#       STACK_LABEL_ACTUAL_LANDG_PENSION="Actual LandG Pension"
+# This keeps the UI headers aligned and the shared auth landing page aware of the service.

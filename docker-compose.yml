@@ -75,6 +75,7 @@ services:
     container_name: actual-auto-auth
     env_file:
       - *shared_env_file
+      - ./env/actual-auto-auth.env
     restart: unless-stopped
     networks:
       - proxy
