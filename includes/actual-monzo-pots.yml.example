@@ -46,6 +46,14 @@ services:
       - traefik.http.routers.monzo-callback.middlewares=monzo-trim@docker
       - traefik.http.routers.monzo-callback.service=monzo@docker
 
+# When enabling this include, create `env/actual-monzo-pots.env` (or extend an existing env file)
+# with values such as:
+#   MONZO_LOGIN_NAME="Actual Monzo Pots"
+#   MONZO_AUTH_COOKIE_NAME=monzo-auth
+#   STACK_LINK_ACTUAL_MONZO_POTS=/monzo/
+#   STACK_LABEL_ACTUAL_MONZO_POTS="${MONZO_LOGIN_NAME}"
+# so the shared auth gateway can surface a shortcut on the home page.
+
   actual-auto-auth:
     environment:
       STACK_LINK_ACTUAL_MONZO_POTS: /monzo/

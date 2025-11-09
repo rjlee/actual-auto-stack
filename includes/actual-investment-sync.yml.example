@@ -41,6 +41,14 @@ services:
       - traefik.http.middlewares.investment-trim.stripprefix.prefixes=/investment
       - traefik.http.middlewares.investment-chain.chain.middlewares=investment-static-headers@docker,investment-forwardauth@docker,investment-trim@docker
 
+# When enabling this include, create `env/actual-investment-sync.env` (or extend an existing env file)
+# with values such as:
+#   INVEST_SYNC_LOGIN_NAME="Actual Investment Sync"
+#   INVEST_SYNC_AUTH_COOKIE_NAME=investment-auth
+#   STACK_LINK_ACTUAL_INVESTMENT_SYNC=/investment/
+#   STACK_LABEL_ACTUAL_INVESTMENT_SYNC="${INVEST_SYNC_LOGIN_NAME}"
+# so the shared auth gateway can surface a shortcut on the home page.
+
   actual-auto-auth:
     environment:
       STACK_LINK_ACTUAL_INVESTMENT_SYNC: /investment/
