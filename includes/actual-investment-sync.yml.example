@@ -7,7 +7,7 @@ services:
       - ../env/actual-investment-sync.env
     environment:
       BUDGET_DIR: /app/data/budget
-      HTTP_PORT: ${INVEST_SYNC_HTTP_PORT}
+      HTTP_PORT: ${INVEST_SYNC_HTTP_PORT:-3000}
       AUTH_COOKIE_NAME: ${INVEST_SYNC_AUTH_COOKIE_NAME:-actual-auth}
     restart: unless-stopped
     depends_on:
