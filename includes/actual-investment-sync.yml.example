@@ -48,8 +48,3 @@ services:
 #   STACK_LINK_ACTUAL_INVESTMENT_SYNC=/investment/
 #   STACK_LABEL_ACTUAL_INVESTMENT_SYNC="${INVEST_SYNC_LOGIN_NAME}"
 # so the shared auth gateway can surface a shortcut on the home page.
-
-  actual-auto-auth:
-    environment:
-      STACK_LINK_ACTUAL_INVESTMENT_SYNC: /investment/
-      STACK_LABEL_ACTUAL_INVESTMENT_SYNC: ${INVEST_SYNC_LOGIN_NAME:-Actual Investment Sync}

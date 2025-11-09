@@ -53,8 +53,3 @@ services:
 #   STACK_LINK_ACTUAL_MONZO_POTS=/monzo/
 #   STACK_LABEL_ACTUAL_MONZO_POTS="${MONZO_LOGIN_NAME}"
 # so the shared auth gateway can surface a shortcut on the home page.
-
-  actual-auto-auth:
-    environment:
-      STACK_LINK_ACTUAL_MONZO_POTS: /monzo/
-      STACK_LABEL_ACTUAL_MONZO_POTS: ${MONZO_LOGIN_NAME:-Actual Monzo Pots}
