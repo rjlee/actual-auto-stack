@@ -45,6 +45,12 @@ services:
       - traefik.http.routers.monzo-callback.priority=120
       - traefik.http.routers.monzo-callback.middlewares=monzo-trim@docker
       - traefik.http.routers.monzo-callback.service=monzo@docker
+      - traefik.http.middlewares.monzo-api-chain.chain.middlewares=monzo-static-headers@docker,monzo-forwardauth@docker
+      - "traefik.http.routers.monzo-api.rule=HeadersRegexp(`Cookie`, `${MONZO_AUTH_COOKIE_NAME:-monzo-auth}=`) && PathPrefix(`/api`)"
+      - traefik.http.routers.monzo-api.entrypoints=web
+      - traefik.http.routers.monzo-api.middlewares=monzo-api-chain@docker
+      - traefik.http.routers.monzo-api.priority=120
+      - traefik.http.routers.monzo-api.service=monzo@docker
 
 # When enabling this include:
 #   • Update `env/actual-monzo-pots.env` with, for example:
