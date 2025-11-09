@@ -90,7 +90,7 @@ Each service stores data under `state/<service>`. Budget caches live in `state/<
 - `http://<host>:${STACK_HTTP_PORT:-3000}/` – Authenticated home page with shortcuts to enabled services (links auto-generated from `STACK_LINK_*`, `STACK_NAV_LINKS`, and the defaults above).
 - `http://<host>:${STACK_HTTP_PORT:-3000}/dashboard/` – Traefik dashboard (lists routers/services and is secured by the shared auth gateway).
 - `http://<host>:${STACK_HTTP_PORT:-3000}/categorise/` – Actual Auto Categorise UI.
-  (Add additional path-based routers for other UIs using the same pattern; set `STACK_LINK_*`/`STACK_LABEL_*` for automatic inclusion on the home page.)
+- Add additional path-based routers for optional UIs using the include files (e.g., `/investment/`, `/landg/`, `/monzo/`). Set `STACK_LINK_*`/`STACK_LABEL_*` so the home page picks them up automatically.
 
 ## Image tags
 

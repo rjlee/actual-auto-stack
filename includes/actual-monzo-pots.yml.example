@@ -8,8 +8,7 @@ services:
     environment:
       BUDGET_DIR: /app/data/budget
       HTTP_PORT: ${MONZO_HTTP_PORT}
-    ports:
-      - "${MONZO_HTTP_PORT:-3000}:${MONZO_HTTP_PORT:-3000}"
+      AUTH_COOKIE_NAME: ${MONZO_AUTH_COOKIE_NAME:-monzo-auth}
     restart: unless-stopped
     depends_on:
       actual-events:
@@ -18,8 +17,36 @@ services:
       - type: bind
         source: ../state/actual-monzo-pots
         target: /app/data
+    networks:
+      - default
+      - proxy
     logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=actual-auto-stack_proxy
+      - traefik.http.routers.monzo.rule=PathPrefix(`/monzo`)
+      - traefik.http.routers.monzo.entrypoints=web
+      - traefik.http.routers.monzo.middlewares=monzo-chain@docker
+      - traefik.http.services.monzo.loadbalancer.server.port=${MONZO_HTTP_PORT:-3000}
+      - traefik.http.middlewares.monzo-static-headers.headers.customrequestheaders.X-Actual-App-Name=${MONZO_LOGIN_NAME:-Actual Monzo Pots}
+      - traefik.http.middlewares.monzo-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${MONZO_AUTH_COOKIE_NAME:-monzo-auth}
+      - traefik.http.middlewares.monzo-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
+      - traefik.http.middlewares.monzo-forwardauth.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.monzo-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
+      - "traefik.http.middlewares.monzo-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto,Cookie"
+      - traefik.http.middlewares.monzo-trim.stripprefix.prefixes=/monzo
+      - traefik.http.middlewares.monzo-chain.chain.middlewares=monzo-static-headers@docker,monzo-forwardauth@docker,monzo-trim@docker
+      - traefik.http.routers.monzo-callback.rule=PathPrefix(`/monzo/auth/callback`)
+      - traefik.http.routers.monzo-callback.entrypoints=web
+      - traefik.http.routers.monzo-callback.priority=120
+      - traefik.http.routers.monzo-callback.middlewares=monzo-trim@docker
+      - traefik.http.routers.monzo-callback.service=monzo@docker
+
+  actual-auto-auth:
+    environment:
+      STACK_LINK_ACTUAL_MONZO_POTS: /monzo/
+      STACK_LABEL_ACTUAL_MONZO_POTS: ${MONZO_LOGIN_NAME:-Actual Monzo Pots}
