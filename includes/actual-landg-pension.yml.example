@@ -40,8 +40,8 @@ services:
       - "traefik.http.middlewares.landg-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto,Cookie"
       - traefik.http.middlewares.landg-trim.stripprefix.prefixes=/landg
       - traefik.http.middlewares.landg-chain.chain.middlewares=landg-static-headers@docker,landg-forwardauth@docker,landg-trim@docker
-      - traefik.http.middlewares.landg-api-chain.chain.middlewares=landg-static-headers@docker,landg-forwardauth@docker
-      - "traefik.http.routers.landg-api.rule=HeadersRegexp(`Cookie`, `${LANDG_AUTH_COOKIE_NAME:-actual-auth}=`) && PathPrefix(`/api`)"
+      - traefik.http.middlewares.landg-api-chain.chain.middlewares=landg-static-headers@docker,landg-forwardauth@docker,landg-trim@docker
+      - "traefik.http.routers.landg-api.rule=HeadersRegexp(`Cookie`, `${LANDG_AUTH_COOKIE_NAME:-actual-auth}=`) && PathPrefix(`/landg/api`)"
       - traefik.http.routers.landg-api.entrypoints=web
       - traefik.http.routers.landg-api.middlewares=landg-api-chain@docker
       - traefik.http.routers.landg-api.priority=120

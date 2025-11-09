@@ -40,6 +40,12 @@ services:
       - "traefik.http.middlewares.investment-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto,Cookie"
       - traefik.http.middlewares.investment-trim.stripprefix.prefixes=/investment
       - traefik.http.middlewares.investment-chain.chain.middlewares=investment-static-headers@docker,investment-forwardauth@docker,investment-trim@docker
+      - traefik.http.middlewares.investment-api-chain.chain.middlewares=investment-static-headers@docker,investment-forwardauth@docker,investment-trim@docker
+      - "traefik.http.routers.investment-api.rule=HeadersRegexp(`Cookie`, `${INVEST_SYNC_AUTH_COOKIE_NAME:-actual-auth}=`) && PathPrefix(`/investment/api`)"
+      - traefik.http.routers.investment-api.entrypoints=web
+      - traefik.http.routers.investment-api.middlewares=investment-api-chain@docker
+      - traefik.http.routers.investment-api.priority=120
+      - traefik.http.routers.investment-api.service=investment@docker
 
 # When enabling this include:
 #   • Update `env/actual-investment-sync.env` with, for example:
