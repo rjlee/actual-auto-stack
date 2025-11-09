@@ -33,8 +33,8 @@ services:
       - traefik.http.routers.dashboard.entrypoints=web
       - traefik.http.routers.dashboard.middlewares=dashboard-chain@docker
       - traefik.http.routers.dashboard.service=api@internal
-      - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Actual-App-Name=Traefik Dashboard
-      - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Actual-Cookie-Name=dashboard-auth
+      - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Actual-App-Name=${STACK_DASHBOARD_NAME:-actual-auto-traefik}
+      - traefik.http.middlewares.dashboard-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${AUTH_FORWARD_COOKIE_NAME:-actual-auth}
       - traefik.http.middlewares.dashboard-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.dashboard-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.dashboard-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
@@ -86,11 +86,11 @@ services:
       STACK_NAV_LINKS: ${STACK_NAV_LINKS:-}
       STACK_INCLUDE_DEFAULT_LINKS: ${STACK_INCLUDE_DEFAULT_LINKS:-true}
       STACK_INCLUDE_CATEGORISE_LINK: ${STACK_INCLUDE_CATEGORISE_LINK:-true}
-      CATEGORISE_LOGIN_NAME: ${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}
+      CATEGORISE_LOGIN_NAME: ${CATEGORISE_LOGIN_NAME:-actual-auto-categorise}
       STACK_LINK_TRAEFIK_DASHBOARD: /dashboard/
-      STACK_LABEL_TRAEFIK_DASHBOARD: ${STACK_DASHBOARD_NAME:-Traefik Dashboard}
+      STACK_LABEL_TRAEFIK_DASHBOARD: ${STACK_DASHBOARD_NAME:-actual-auto-traefik}
       STACK_LINK_ACTUAL_AUTO_CATEGORISE: /categorise/
-      STACK_LABEL_ACTUAL_AUTO_CATEGORISE: ${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}
+      STACK_LABEL_ACTUAL_AUTO_CATEGORISE: ${CATEGORISE_LOGIN_NAME:-actual-auto-categorise}
     labels:
       - traefik.enable=true
       - traefik.docker.network=actual-auto-stack_proxy
@@ -107,7 +107,7 @@ services:
       - ./env/actual-auto-categorise.env
     environment:
       <<: *common_env
-      AUTH_COOKIE_NAME: ${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
+      AUTH_COOKIE_NAME: ${CATEGORISE_AUTH_COOKIE_NAME:-actual-auth}
       HTTP_PORT: ${CATEGORISE_HTTP_PORT:-3000}
     restart: unless-stopped
     depends_on:
@@ -128,8 +128,8 @@ services:
       - traefik.http.routers.categorise.entrypoints=web
       - traefik.http.routers.categorise.middlewares=categorise-chain@docker
       - traefik.http.services.categorise.loadbalancer.server.port=${CATEGORISE_HTTP_PORT:-3000}
-      - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-App-Name=${CATEGORISE_LOGIN_NAME:-Actual Auto Categorise}
-      - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${CATEGORISE_AUTH_COOKIE_NAME:-categorise-auth}
+      - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-App-Name=${CATEGORISE_LOGIN_NAME:-actual-auto-categorise}
+      - traefik.http.middlewares.categorise-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${CATEGORISE_AUTH_COOKIE_NAME:-actual-auth}
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.categorise-forwardauth.forwardauth.authResponseHeaders=Set-Cookie

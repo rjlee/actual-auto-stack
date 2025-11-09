@@ -8,7 +8,7 @@ services:
     environment:
       BUDGET_DIR: /app/data/budget
       HTTP_PORT: ${LANDG_HTTP_PORT}
-      AUTH_COOKIE_NAME: ${LANDG_AUTH_COOKIE_NAME:-landg-auth}
+      AUTH_COOKIE_NAME: ${LANDG_AUTH_COOKIE_NAME:-actual-auth}
     restart: unless-stopped
     depends_on:
       actual-events:
@@ -32,8 +32,8 @@ services:
       - traefik.http.routers.landg.entrypoints=web
       - traefik.http.routers.landg.middlewares=landg-chain@docker
       - traefik.http.services.landg.loadbalancer.server.port=${LANDG_HTTP_PORT:-3000}
-      - traefik.http.middlewares.landg-static-headers.headers.customrequestheaders.X-Actual-App-Name=${LANDG_LOGIN_NAME:-Actual LandG Pension}
-      - traefik.http.middlewares.landg-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${LANDG_AUTH_COOKIE_NAME:-landg-auth}
+      - traefik.http.middlewares.landg-static-headers.headers.customrequestheaders.X-Actual-App-Name=${LANDG_LOGIN_NAME:-actual-landg-pension}
+      - traefik.http.middlewares.landg-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${LANDG_AUTH_COOKIE_NAME:-actual-auth}
       - traefik.http.middlewares.landg-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.landg-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.landg-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
@@ -41,7 +41,7 @@ services:
       - traefik.http.middlewares.landg-trim.stripprefix.prefixes=/landg
       - traefik.http.middlewares.landg-chain.chain.middlewares=landg-static-headers@docker,landg-forwardauth@docker,landg-trim@docker
       - traefik.http.middlewares.landg-api-chain.chain.middlewares=landg-static-headers@docker,landg-forwardauth@docker
-      - "traefik.http.routers.landg-api.rule=HeadersRegexp(`Cookie`, `${LANDG_AUTH_COOKIE_NAME:-landg-auth}=`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.landg-api.rule=HeadersRegexp(`Cookie`, `${LANDG_AUTH_COOKIE_NAME:-actual-auth}=`) && PathPrefix(`/api`)"
       - traefik.http.routers.landg-api.entrypoints=web
       - traefik.http.routers.landg-api.middlewares=landg-api-chain@docker
       - traefik.http.routers.landg-api.priority=120
@@ -49,9 +49,9 @@ services:
 
 # When enabling this include:
 #   • Update `env/actual-landg-pension.env` with, for example:
-#       LANDG_LOGIN_NAME="Actual LandG Pension"
-#       LANDG_AUTH_COOKIE_NAME=landg-auth
+#       LANDG_LOGIN_NAME=actual-landg-pension
+#       LANDG_AUTH_COOKIE_NAME=actual-auth
 #   • Add the matching shortcut to `env/actual-auto-auth.env`, for example:
 #       STACK_LINK_ACTUAL_LANDG_PENSION=/landg/
-#       STACK_LABEL_ACTUAL_LANDG_PENSION="Actual LandG Pension"
+#       STACK_LABEL_ACTUAL_LANDG_PENSION=actual-landg-pension
 # This keeps the UI headers aligned and the shared auth landing page aware of the service.

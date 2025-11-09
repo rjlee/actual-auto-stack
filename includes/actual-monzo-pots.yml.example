@@ -8,7 +8,7 @@ services:
     environment:
       BUDGET_DIR: /app/data/budget
       HTTP_PORT: ${MONZO_HTTP_PORT}
-      AUTH_COOKIE_NAME: ${MONZO_AUTH_COOKIE_NAME:-monzo-auth}
+      AUTH_COOKIE_NAME: ${MONZO_AUTH_COOKIE_NAME:-actual-auth}
     restart: unless-stopped
     depends_on:
       actual-events:
@@ -32,8 +32,8 @@ services:
       - traefik.http.routers.monzo.entrypoints=web
       - traefik.http.routers.monzo.middlewares=monzo-chain@docker
       - traefik.http.services.monzo.loadbalancer.server.port=${MONZO_HTTP_PORT:-3000}
-      - traefik.http.middlewares.monzo-static-headers.headers.customrequestheaders.X-Actual-App-Name=${MONZO_LOGIN_NAME:-Actual Monzo Pots}
-      - traefik.http.middlewares.monzo-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${MONZO_AUTH_COOKIE_NAME:-monzo-auth}
+      - traefik.http.middlewares.monzo-static-headers.headers.customrequestheaders.X-Actual-App-Name=${MONZO_LOGIN_NAME:-actual-monzo-pots}
+      - traefik.http.middlewares.monzo-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${MONZO_AUTH_COOKIE_NAME:-actual-auth}
       - traefik.http.middlewares.monzo-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.monzo-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.monzo-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
@@ -46,7 +46,7 @@ services:
       - traefik.http.routers.monzo-callback.middlewares=monzo-trim@docker
       - traefik.http.routers.monzo-callback.service=monzo@docker
       - traefik.http.middlewares.monzo-api-chain.chain.middlewares=monzo-static-headers@docker,monzo-forwardauth@docker
-      - "traefik.http.routers.monzo-api.rule=HeadersRegexp(`Cookie`, `${MONZO_AUTH_COOKIE_NAME:-monzo-auth}=`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.monzo-api.rule=HeadersRegexp(`Cookie`, `${MONZO_AUTH_COOKIE_NAME:-actual-auth}=`) && PathPrefix(`/api`)"
       - traefik.http.routers.monzo-api.entrypoints=web
       - traefik.http.routers.monzo-api.middlewares=monzo-api-chain@docker
       - traefik.http.routers.monzo-api.priority=120
@@ -54,9 +54,9 @@ services:
 
 # When enabling this include:
 #   • Update `env/actual-monzo-pots.env` with, for example:
-#       MONZO_LOGIN_NAME="Actual Monzo Pots"
-#       MONZO_AUTH_COOKIE_NAME=monzo-auth
+#       MONZO_LOGIN_NAME=actual-monzo-pots
+#       MONZO_AUTH_COOKIE_NAME=actual-auth
 #   • Add the matching shortcut to `env/actual-auto-auth.env`, for example:
 #       STACK_LINK_ACTUAL_MONZO_POTS=/monzo/
-#       STACK_LABEL_ACTUAL_MONZO_POTS="Actual Monzo Pots"
+#       STACK_LABEL_ACTUAL_MONZO_POTS=actual-monzo-pots
 # This keeps the UI headers aligned and the shared auth landing page aware of the service.

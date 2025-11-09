@@ -8,7 +8,7 @@ services:
     environment:
       BUDGET_DIR: /app/data/budget
       HTTP_PORT: ${INVEST_SYNC_HTTP_PORT}
-      AUTH_COOKIE_NAME: ${INVEST_SYNC_AUTH_COOKIE_NAME:-investment-auth}
+      AUTH_COOKIE_NAME: ${INVEST_SYNC_AUTH_COOKIE_NAME:-actual-auth}
     restart: unless-stopped
     depends_on:
       actual-events:
@@ -32,8 +32,8 @@ services:
       - traefik.http.routers.investment.entrypoints=web
       - traefik.http.routers.investment.middlewares=investment-chain@docker
       - traefik.http.services.investment.loadbalancer.server.port=${INVEST_SYNC_HTTP_PORT:-3000}
-      - traefik.http.middlewares.investment-static-headers.headers.customrequestheaders.X-Actual-App-Name=${INVEST_SYNC_LOGIN_NAME:-Actual Investment Sync}
-      - traefik.http.middlewares.investment-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${INVEST_SYNC_AUTH_COOKIE_NAME:-investment-auth}
+      - traefik.http.middlewares.investment-static-headers.headers.customrequestheaders.X-Actual-App-Name=${INVEST_SYNC_LOGIN_NAME:-actual-investment-sync}
+      - traefik.http.middlewares.investment-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${INVEST_SYNC_AUTH_COOKIE_NAME:-actual-auth}
       - traefik.http.middlewares.investment-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
       - traefik.http.middlewares.investment-forwardauth.forwardauth.trustForwardHeader=true
       - traefik.http.middlewares.investment-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
@@ -43,9 +43,9 @@ services:
 
 # When enabling this include:
 #   • Update `env/actual-investment-sync.env` with, for example:
-#       INVEST_SYNC_LOGIN_NAME="Actual Investment Sync"
-#       INVEST_SYNC_AUTH_COOKIE_NAME=investment-auth
+#       INVEST_SYNC_LOGIN_NAME=actual-investment-sync
+#       INVEST_SYNC_AUTH_COOKIE_NAME=actual-auth
 #   • Add the matching shortcut to `env/actual-auto-auth.env`, for example:
 #       STACK_LINK_ACTUAL_INVESTMENT_SYNC=/investment/
-#       STACK_LABEL_ACTUAL_INVESTMENT_SYNC="Actual Investment Sync"
+#       STACK_LABEL_ACTUAL_INVESTMENT_SYNC=actual-investment-sync
 # This keeps the UI headers aligned and the shared auth landing page aware of the service.
