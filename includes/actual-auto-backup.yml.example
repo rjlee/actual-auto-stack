@@ -14,8 +14,11 @@ services:
         source: ../state/actual-auto-backup
         target: /app/data
       - type: bind
-        source: ../secrets
+        source: ../state/actual-auto-backup/secrets
         target: /app/secrets
+      - type: bind
+        source: /mnt/backup
+        target: /app/data/backups
     networks:
       - default
       - proxy
@@ -41,8 +44,7 @@ services:
       - traefik.http.middlewares.backup-chain.chain.middlewares=backup-headers@docker,backup-forwardauth@docker,backup-trim@docker
 
 # When enabling this include:
-#   • Copy `env/actual-auto-backup.env.example` to `env/actual-auto-backup.env` and fill your Actual credentials and provider settings.
+#   • Copy `env/actual-auto-backup.env.example` to `env/actual-auto-backup.env` and fill your Actual credentials and provider settings. Mount optional secrets (OAuth credentials, service account JSON) via `./secrets` if needed.
 #   • Add a shortcut to `env/actual-auto-auth.env`, for example:
 #       STACK_LINK_ACTUAL_AUTO_BACKUP=/backup/
 #       STACK_LABEL_ACTUAL_AUTO_BACKUP=actual-auto-backup
-#   • Mount any secrets needed for OAuth (e.g. Google service account JSON) into `secrets/`.
