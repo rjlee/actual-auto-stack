@@ -1,0 +1,62 @@
+services:
+  actual-sync-google-sheets:
+    image: ghcr.io/rjlee/actual-sync-google-sheets:${ACTUAL_IMAGE_TAG:-latest}
+    container_name: actual-sync-google-sheets
+    env_file:
+      - ../.env
+      - ../env/actual-sync-google-sheets.env
+    environment:
+      BUDGET_DIR: /app/data/budget
+      TOKEN_STORE_PATH: /app/data/tokens
+      HTTP_PORT: ${SHEETS_HTTP_PORT:-4020}
+      AUTH_COOKIE_NAME: ${SHEETS_AUTH_COOKIE_NAME:-actual-auth}
+      PUBLIC_URL: ${SHEETS_PUBLIC_URL:-http://localhost:4020}
+    restart: unless-stopped
+    depends_on:
+      actual-events:
+        condition: service_healthy
+    volumes:
+      - type: bind
+        source: ../state/actual-sync-google-sheets
+        target: /app/data
+      - type: bind
+        source: ../state/actual-sync-google-sheets/config
+        target: /app/config
+      - type: bind
+        source: ../state/actual-sync-google-sheets/credentials
+        target: /app/credentials
+    networks:
+      - default
+      - proxy
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=actual-auto-stack_proxy
+      - traefik.http.routers.sheets.rule=PathPrefix(`/sheets`)
+      - traefik.http.routers.sheets.entrypoints=web
+      - traefik.http.routers.sheets.middlewares=sheets-chain@docker
+      - traefik.http.services.sheets.loadbalancer.server.port=${SHEETS_HTTP_PORT:-4020}
+      - traefik.http.middlewares.sheets-static-headers.headers.customrequestheaders.X-Actual-App-Name=${SHEETS_LOGIN_NAME:-actual-sync-google-sheets}
+      - traefik.http.middlewares.sheets-static-headers.headers.customrequestheaders.X-Actual-Cookie-Name=${SHEETS_AUTH_COOKIE_NAME:-actual-auth}
+      - traefik.http.middlewares.sheets-forwardauth.forwardauth.address=http://actual-auto-auth:4000/check
+      - traefik.http.middlewares.sheets-forwardauth.forwardauth.trustForwardHeader=true
+      - traefik.http.middlewares.sheets-forwardauth.forwardauth.authResponseHeaders=Set-Cookie
+      - "traefik.http.middlewares.sheets-forwardauth.forwardauth.authRequestHeaders=X-Actual-App-Name,X-Actual-Cookie-Name,X-Forwarded-Host,X-Forwarded-Proto,Cookie"
+      - traefik.http.middlewares.sheets-trim.stripprefix.prefixes=/sheets
+      - traefik.http.middlewares.sheets-chain.chain.middlewares=sheets-static-headers@docker,sheets-forwardauth@docker,sheets-trim@docker
+      - traefik.http.routers.sheets-callback.rule=PathPrefix(`/sheets/oauth`)
+      - traefik.http.routers.sheets-callback.entrypoints=web
+      - traefik.http.routers.sheets-callback.priority=120
+      - traefik.http.routers.sheets-callback.middlewares=sheets-trim@docker
+      - traefik.http.routers.sheets-callback.service=sheets@docker
+
+# When enabling this include:
+#   • Copy `env/actual-sync-google-sheets.env.example` to `env/actual-sync-google-sheets.env` and fill in spreadsheet IDs, OAuth credentials, and auth headers.
+#   • Add the matching shortcut to `env/actual-auto-auth.env`, for example:
+#       STACK_LINK_ACTUAL_SYNC_GOOGLE_SHEETS=/sheets/
+#       STACK_LABEL_ACTUAL_SYNC_GOOGLE_SHEETS=actual-sync-google-sheets
+#   • Place your `config/sheets.yml` and optional `credentials/` files inside `state/actual-sync-google-sheets/` on the host so the container can read them.
